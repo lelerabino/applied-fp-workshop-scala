@@ -54,11 +54,46 @@ class ModelData extends munit.FunSuite {
    *       Each player receives three cards. The dealer will also place four cards face up on the table.
    */
 
+
+
+  sealed trait Suit
+  case object Cups extends Suit
+  case object Golds extends Suit
+  case object Swords extends Suit
+  case object Clubs extends Suit
+
+  sealed trait Value
+  case object Ace extends Value
+  case object Two extends Value
+  case object Three extends Value
+  case object Four extends Value
+  case object Five extends Value
+  case object Six extends Value
+  case object Seven extends Value
+  case object Knight extends Value
+  case object Queen extends Value
+  case object King extends Value
+
+  case class Card(suit:Suit, value: Value)
+
+  case class Player(name:String, hand: List[Card], pile: List[Card])
+
+  case class Table(cards:List[Card])
+  case class Deck(cards:List[Card])
+  case class Game(deck: Deck, table: Table, player1: Player, player2: Player)
+
+
+
   test("represent initial match state".ignore) {
     // TODO: build the first player w/ 2 of Golds, 5 of Swords and 7 of Clubs
+    val player1 = Player("p1", List(Card(Golds, Two), Card(Swords, Five), Card(Clubs, Seven)), List())
     // TODO: build the second player w/ 1 of Cups, 2 of Clubs and 9 of Golds
+    val player2 = Player("p2", List(Card(Cups, Ace), Card(Clubs, Two), Card(Golds, Queen)), List())
     // TODO: build the table w/ 4 of Clubs, 10 of Swords, 8 of Golds and 1 of Swords
+    val table = Table(List(Card(Clubs, Four),Card(Swords, King),Card(Golds, Knight),Card(Swords, Ace)))
     // TODO: build the deck w/ only 1 of Swords and 10 of Clubs
+    val deck = Deck(List(Card(Swords, Ace), Card(Clubs, King)))
     // TODO: build the game
+    val game = Game(deck, table, player1, player2)
   }
 }
