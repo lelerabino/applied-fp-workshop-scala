@@ -1,15 +1,13 @@
 package marsroverkata.answers
 
-import scala.util._
-import scala.Console._
-import scala.io._
-
-import cats._
-import cats.data._
-import cats.implicits._
-import cats.effect._
-
 object Version4 {
+
+  import cats.effect._
+  import cats.implicits._
+
+  import scala.Console._
+  import scala.io._
+  import scala.util._
 
   def loadPlanetData(file: String): IO[(String, String)] = loadTupled(file)
   def loadRoverData(file: String): IO[(String, String)]  = loadTupled(file)
@@ -32,32 +30,10 @@ object Version4 {
   def askCommands(): IO[String] =
     ask("Waiting commands...")
 
-  def logError(message: String): IO[Unit] =
-    puts(s"${RED}ERROR: ${message}${RESET}")
-
-  def handleApp(logger: String => IO[Unit]): IO[Either[List[Error], String]] => IO[String] =
-    app =>
-      app
-        .flatMap(e => IO.fromEither(e.leftMap(AppError)))
-        .attempt
-        .flatMap(handleUnexpected(logger))
-
-  def handleUnexpected(logger: String => IO[Unit]): Either[Throwable, String] => IO[String] =
-    e => e.fold(ex => logger(ex.getMessage) *> IO.pure("Ooops :-("), IO.pure)
-
-  def run(planet: (String, String), rover: (String, String), commands: String): Either[List[Error], String] =
+  def run(planet: (String, String), rover: (String, String), commands: String): Either[Error, String] =
     init(planet, rover)
       .map(execute(_, parseCommands(commands)))
       .map(_.bimap(_.rover, _.rover).fold(renderHit, render))
-      .toEither
-      .leftMap(_.toList)
-
-  case class AppError(errs: List[Error]) extends RuntimeException
-
-  sealed trait Error
-  case class InvalidPlanet(value: String, error: String)   extends Error
-  case class InvalidRover(value: String, error: String)    extends Error
-  case class InvalidObstacle(value: String, error: String) extends Error
 
   def parseTuple[A](separator: String, raw: String, ctor: (Int, Int) => A): Try[A] =
     Try {
@@ -65,27 +41,25 @@ object Version4 {
       (parts(0).trim.toInt, parts(1).trim.toInt)
     }.map(ctor.tupled(_))
 
-  def parsePlanet(raw: (String, String)): ValidatedNel[Error, Planet] =
+  def parsePlanet(raw: (String, String)): Either[Error, Planet] =
     raw
       .bimap(parseSize, parseObstacles)
       .mapN(Planet.apply)
 
-  def parseSize(raw: String): ValidatedNel[Error, Size] =
+  def parseSize(raw: String): Either[Error, Size] =
     parseTuple("x", raw, Size.apply).toEither
       .leftMap(_ => InvalidPlanet(raw, "InvalidSize"))
-      .toValidatedNel
 
-  def parseRover(raw: (String, String)): ValidatedNel[Error, Rover] =
+  def parseRover(raw: (String, String)): Either[Error, Rover] =
     raw
       .bimap(parsePosition, parseDirection)
       .mapN(Rover.apply)
 
-  def parsePosition(raw: String): ValidatedNel[Error, Position] =
+  def parsePosition(raw: String): Either[Error, Position] =
     parseTuple(",", raw, Position.apply).toEither
       .leftMap(_ => InvalidRover(raw, "InvalidPosition"))
-      .toValidatedNel
 
-  def parseDirection(raw: String): ValidatedNel[Error, Direction] =
+  def parseDirection(raw: String): Either[Error, Direction] =
     Try {
       raw.trim.toLowerCase match {
         case "n" => N
@@ -95,7 +69,6 @@ object Version4 {
       }
     }.toEither
       .leftMap(_ => InvalidRover(raw, "InvalidDirection"))
-      .toValidatedNel
 
   def parseCommands(raw: String): List[Command] =
     raw.map(parseCommand).toList
@@ -109,17 +82,15 @@ object Version4 {
       case _   => Unknown
     }
 
-  def parseObstacles(raw: String): ValidatedNel[Error, List[Obstacle]] =
+  def parseObstacles(raw: String): Either[Error, List[Obstacle]] =
     raw.split(" ").toList.traverse(parseObstacle)
 
-  def parseObstacle(raw: String): ValidatedNel[Error, Obstacle] =
+  def parseObstacle(raw: String): Either[Error, Obstacle] =
     parsePosition(raw)
       .map(Obstacle.apply)
-      .toEither
       .leftMap(ex => InvalidObstacle(raw, ex.getClass.getSimpleName))
-      .toValidatedNel
 
-  def init(planet: (String, String), rover: (String, String)): ValidatedNel[Error, Mission] =
+  def init(planet: (String, String), rover: (String, String)): Either[Error, Mission] =
     (
       parsePlanet(planet),
       parseRover(rover)
@@ -141,7 +112,7 @@ object Version4 {
       case Unknown  => noOp(mission.rover).some
     }).map(r => mission.copy(rover = r)).toRight(mission)
 
-  val noOp: Rover => Rover = identity _
+  val noOp: Rover => Rover = identity
 
   def turn(rover: Rover, turn: TurnType): Rover =
     rover.copy(direction = turn match {
@@ -204,6 +175,11 @@ object Version4 {
     if (planet.obstacles.map(_.position).contains(candidate)) None
     else candidate.some
   }
+
+  sealed trait Error
+  case class InvalidPlanet(value: String, error: String)   extends Error
+  case class InvalidRover(value: String, error: String)    extends Error
+  case class InvalidObstacle(value: String, error: String) extends Error
 
   case class Delta(x: Int, y: Int)
   case class Position(x: Int, y: Int)

@@ -1,7 +1,6 @@
 package marsroverkata
 
-// TODO: uncomment import
-// import marsroverkata.Version1._
+import marsroverkata.Version1._
 
 class Version1Tests extends munit.FunSuite {
 
@@ -15,73 +14,115 @@ class Version1Tests extends munit.FunSuite {
 // | 0,0 |     |     |     | 4,0 |
 // +-----+-----+-----+-----+-----+
 
-  test("three times right".ignore) {
-    /*
-        Planet: 5 4
-        Rover: 0 0 N
-        Commands: RRR
-        --
-        Rover: 0 0 W
-   */
+  test("turn right command") {
+    val planet = Planet(5, 4)
+    val rover  = Rover(Point(0, 0), North)
+    val cmd    = TurnRight
+
+    assertEquals(eval(cmd, rover, planet), Rover(Point(0, 0), Est))
   }
 
-  test("two times left".ignore) {
-    /*
-        Planet: 5 4
-        Rover: 0 0 N
-        Commands: LL
-        --
-        Rover: 0 0 S
-   */
+  test("turn left command") {
+    val planet = Planet(5, 4)
+    val rover  = Rover(Point(0, 0), North)
+    val cmd    = TurnLeft
+
+    assertEquals(eval(cmd, rover, planet), Rover(Point(0, 0), West))
   }
 
-  test("wrap on North".ignore) {
-    /*
-        Planet: 5 4
-        Rover: 0 0 N
-        Commands: FFFFFF
-        --
-        Rover: 0 2 N
-   */
+  test("move forward command") {
+    val planet = Planet(5, 4)
+    val rover  = Rover(Point(0, 1), North)
+    val cmd    = Forward
+
+    assertEquals(eval(cmd, rover, planet), Rover(Point(0, 2), North))
   }
 
-  test("wrap on South".ignore) {
-    /*
-        Planet: 5 4
-        Rover: 0 0 S
-        Commands: F
-        --
-        Rover: 0 3 S
-   */
+  test("move forward command, opposite orientation") {
+    val planet = Planet(5, 4)
+    val rover  = Rover(Point(0, 1), South)
+    val cmd    = Forward
+
+    assertEquals(eval(cmd, rover, planet), Rover(Point(0, 0), South))
   }
 
-  test("wrap on Est".ignore) {
-    /*
-        Planet: 5 4
-        Rover: 0 0 E
-        Commands: FFFFF
-        --
-        Rover: 0 0 E
-   */
+  test("move backward command") {
+    val planet = Planet(5, 4)
+    val rover  = Rover(Point(0, 1), North)
+    val cmd    = Backward
+
+    assertEquals(eval(cmd, rover, planet), Rover(Point(0, 0), North))
   }
 
-  test("wrap on West".ignore) {
-    /*
-        Planet: 5 4
-        Rover: 0 0 W
-        Commands: FF
-        --
-        Rover: 3 0 W
-   */
+  test("move backward command, opposite orientation") {
+    val planet = Planet(5, 4)
+    val rover  = Rover(Point(0, 1), South)
+    val cmd    = Backward
+
+    assertEquals(eval(cmd, rover, planet), Rover(Point(0, 2), South))
   }
 
-  test("opposite angle".ignore) {
-    /*
-        Planet: 5 4
-        Rover: 0 0 N
-        Commands: RBBLBRF
-        --
-        Rover: 4 3 E
-   */
+  test("wrap on North") {
+    val planet = Planet(5, 4)
+    val rover  = Rover(Point(0, 3), North)
+    val cmd    = Forward
+
+    assertEquals(eval(cmd, rover, planet), Rover(Point(0, 0), North))
+  }
+
+  test("wrap on South") {
+    val planet = Planet(5, 4)
+    val rover  = Rover(Point(0, 0), South)
+    val cmd    = Forward
+
+    assertEquals(eval(cmd, rover, planet), Rover(Point(0, 3), South))
+  }
+
+  test("wrap on Est") {
+    val planet = Planet(5, 4)
+    val rover  = Rover(Point(4, 1), Est)
+    val cmd    = Forward
+
+    assertEquals(eval(cmd, rover, planet), Rover(Point(0, 1), Est))
+  }
+
+  test("wrap on West") {
+    val planet = Planet(5, 4)
+    val rover  = Rover(Point(0, 1), West)
+    val cmd    = Forward
+
+    assertEquals(eval(cmd, rover, planet), Rover(Point(4, 1), West))
+  }
+
+  test("wrap on West backward") {
+    val planet = Planet(5, 4)
+    val rover  = Rover(Point(0, 1), Est)
+    val cmd    = Backward
+
+    assertEquals(eval(cmd, rover, planet), Rover(Point(4, 1), Est))
+  }
+
+  test("wrap on North backward") {
+    val planet = Planet(5, 4)
+    val rover  = Rover(Point(0, 3), South)
+    val cmd    = Backward
+
+    assertEquals(eval(cmd, rover, planet), Rover(Point(0, 0), South))
+  }
+
+  test("wrap on South backward") {
+    val planet = Planet(5, 4)
+    val rover  = Rover(Point(0, 0), North)
+    val cmd    = Backward
+
+    assertEquals(eval(cmd, rover, planet), Rover(Point(0, 3), North))
+  }
+
+  test("wrap on Est backward") {
+    val planet = Planet(5, 4)
+    val rover  = Rover(Point(4, 1), West)
+    val cmd    = Backward
+
+    assertEquals(eval(cmd, rover, planet), Rover(Point(0, 1), West))
   }
 }
