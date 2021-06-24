@@ -47,16 +47,17 @@ class ProgramAsValues extends munit.FunSuite {
     type Num = () => Int
 
     def num(x: Int): Num =
-      ???
+      () => x
 
     def plus(x: Num, y: Num): Num =
-      ???
+      () => x() + y()
 
     def times(x: Num, y: Num): Num =
-      ???
+      () => x() * y()
+
   }
 
-  test("split building a program from executing it".ignore) {
+  test("split building a program from executing it") {
     // TODO: implements SplitBuildFromExecute functions
     import SplitBuildFromExecute._
     val program = times(plus(num(1), num(1)), num(2))
@@ -66,24 +67,35 @@ class ProgramAsValues extends munit.FunSuite {
 
   object DifferentEvaluator {
     sealed trait Expr
+    case class Num(n: Int)                       extends Expr
+    case class Sum(left: Expr, right: Expr)      extends Expr
+    case class Multiply(left: Expr, right: Expr) extends Expr
 
     def num(x: Int): Expr =
-      ???
+      Num(x)
 
     def plus(x: Expr, y: Expr): Expr =
-      ???
+      Sum(x, y)
 
     def times(x: Expr, y: Expr): Expr =
-      ???
+      Multiply(x, y)
 
     def eval(e: Expr): Int =
-      ???
+      e match {
+        case Num(n)                => n
+        case Sum(left, right)      => eval(left) + eval(right)
+        case Multiply(left, right) => eval(left) * eval(right)
+      }
 
     def evalPrint(e: Expr): String =
-      ???
+      e match {
+        case Num(n)                => n.toString
+        case Sum(left, right)      => s"(${evalPrint(left)} + ${evalPrint(right)})"
+        case Multiply(left, right) => s"(${evalPrint(left)} * ${evalPrint(right)})"
+      }
   }
 
-  test("execute program w/ different evaluator".ignore) {
+  test("execute program w/ different evaluator") {
     // TODO: implements DifferentEvaluator functions
     import DifferentEvaluator._
     val program = times(plus(num(1), num(1)), num(2))
