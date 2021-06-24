@@ -17,6 +17,7 @@ class MultipleDispatch extends munit.FunSuite {
    *       to pattern match dispatch.
    */
 
+  /* original
   trait TrafficLight {
     def next: TrafficLight
   }
@@ -29,10 +30,29 @@ class MultipleDispatch extends munit.FunSuite {
   case class Yellow() extends TrafficLight {
     def next: TrafficLight = Red()
   }
+   */
+
+  sealed trait TrafficLight {
+    def next(): TrafficLight =
+      this match {
+        case Red => Green
+        case Green => Yellow
+        case Yellow => Red
+      }
+  }
+  case object Red extends TrafficLight {
+
+  }
+  case object Green extends TrafficLight {
+
+  }
+  case object Yellow extends TrafficLight {
+
+  }
 
   test("turn right") {
-    assertEquals(Red().next, Green())
-    assertEquals(Green().next, Yellow())
-    assertEquals(Yellow().next, Red())
+    assertEquals(Red.next(), Green)
+    assertEquals(Green.next(), Yellow)
+    assertEquals(Yellow.next(), Red)
   }
 }
